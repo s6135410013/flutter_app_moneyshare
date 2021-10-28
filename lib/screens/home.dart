@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart'
     show
+        AlertDialog,
         AppBar,
         BorderRadius,
         BorderSide,
@@ -36,7 +37,9 @@ import 'package:flutter/material.dart'
         TextInputType,
         TextStyle,
         UnderlineInputBorder,
-        Widget;
+        Widget,
+        showDialog;
+import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter_app_moneyshare/screens/money_share.dart';
 import 'package:flutter_launcher_icons/xml_templates.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -53,6 +56,60 @@ bool checkTip = false;
 TextEditingController txMoney = TextEditingController();
 TextEditingController txPerson = TextEditingController();
 TextEditingController txTip = TextEditingController();
+showWarningDialog(context, msg) {
+  //
+  showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Container(
+            color: Colors.deepPurple,
+            padding: EdgeInsets.only(
+              top: 10,
+              bottom: 10,
+              left: 10,
+            ),
+            child: Text(
+              "คำเตือน :",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          content: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                msg,
+              ),
+            ],
+          ),
+          actions: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.deepPurpleAccent,
+                  ),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text(
+                    "ตกลง",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      });
+}
 
 class _HomeState extends State<Home> {
   @override
@@ -223,13 +280,48 @@ class _HomeState extends State<Home> {
               ),
               ElevatedButton(
                 onPressed: () {
+                  if (txMoney.text.length == 0) {
+                    showWarningDialog(
+                      context,
+                      "ใส่จำนวนเงินด้วยจ้า",
+                    );
+                  } else if (txPerson.text.length == 0) {
+                    showWarningDialog(
+                      context,
+                      "ป้อนจำนวนคนด้วยจ้า",
+                    );
+                  } else {
+                    if (checkTip == true) {
+                      if (txTip.text.length == 0) {
+                        showWarningDialog(
+                          context,
+                          "ป้อนทิปด้วยจ้า",
+                        );
+                        return;
+                      }
+                    }
+                  }
+
+                  double money = 0;
+                  int person = 0;
+                  double tip = 0;
+                  double moneyshare = 0;
+
+                  money = double.parse(txMoney.text);
+                  person = int.parse(txPerson.text);
+                  tip = checkTip == true ? double.parse(txTip.text) : 0;
+                  moneyshare = (money + tip) / person;
                   //เช็คว่าป้อนข้อมูลหรือยัง ถ้ายัง ให้แสดงDialogเตือน
                   //ถ้าป้อนครบแล้วให้คำนวณ และเมื่อคำนวณแล้ว ให้ส่งข้อมูลไปแสดงผลหน้าMoneyShare
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) {
-                        return MoneyShare();
+                        return MoneyShare(
+                            get_money: money,
+                            get_person: person,
+                            get_tip: tip,
+                            get_moneyshare: moneyshare);
                       },
                     ),
                   );
